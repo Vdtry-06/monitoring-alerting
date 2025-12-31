@@ -1,0 +1,23 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'telegram'
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 3m
+
+receivers:
+  - name: 'telegram'
+    telegram_configs:
+      - bot_token: 'YOUR_BOT_TOKEN'
+        chat_id: YOUR_CHAT_ID
+        message: |
+          {{ range .Alerts }}
+          🔔 Alert: {{ .Annotations.summary }}
+          📝 Description: {{ .Annotations.description }}
+          🔴 Severity: {{ .Labels.severity }}
+          🖥️ Instance: {{ .Labels.instance }}
+          ⏰ Status: {{ .Status }}
+          ---
+          {{ end }}
