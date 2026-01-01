@@ -1,11 +1,68 @@
 groups:
   - name: node_alerts
     rules:
+      # ============================
+      # 1. HIGH CPU USAGE
+      # ============================
       - alert: HighCPUUsage
-        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 2
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 5
         for: 1m
         labels:
           severity: critical
         annotations:
-          summary: "CPU usage is high"
-          description: "CPU usage is above 2% for more than 1 minute."
+          summary: "High CPU Usage on {{ $labels.instance }}"
+          description: "CPU usage is above 5% for more than 1 minute."
+
+      # ============================
+      # 2. HIGH MEMORY USAGE
+      # ============================
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Memory Usage on {{ $labels.instance }}"
+          description: "Memory usage is above 5% for more than 1 minute."
+
+      # ============================
+      # 3. HIGH DISK USAGE
+      # ============================
+      - alert: HighDiskUsage
+        expr: |
+          100 - (
+            (node_filesystem_avail_bytes{fstype!="tmpfs",fstype!="overlay"} /
+            node_filesystem_size_bytes{fstype!="tmpfs",fstype!="overlay"}) * 100
+          ) > 85
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High Disk Usage on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+          description: "Disk usage on {{ $labels.mountpoint }} is above 85%."
+
+      # ============================
+      # 4. HIGH NETWORK TRAFFIC RATE
+      # ============================
+      - alert: HighNetworkTraffic
+        expr: rate(node_network_transmit_bytes_total[5m]) > 10e6   # 10 MB/s (tuỳ chỉnh)
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Network Traffic on {{ $labels.instance }}"
+          description: "Network transmit rate is above 10 MB/s for more than 1 minute."
+
+      # ============================
+      # 5. HIGH DISK IOPS
+      # ============================
+      - alert: HighDiskIOPS
+        expr: |
+          rate(node_disk_reads_completed_total[5m])
+          + rate(node_disk_writes_completed_total[5m]) > 5000
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Disk IOPS on {{ $labels.instance }}"
+          description: "Disk IOPS (reads+writes) is above 5000 operations/s."
