@@ -78,7 +78,6 @@ graph TB
     style I fill:#e8f5e9
     style H fill:#fff9c4
 ```
-![alt text](image-1.png)
 
 ## 3. Cấu trúc thư mục dự án
 
